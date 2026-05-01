@@ -9,6 +9,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.tomcat.util.http.fileupload.IOUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.env.Environment;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -28,7 +29,8 @@ import java.util.List;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
-@CrossOrigin(origins = "http://localhost:5173",exposedHeaders = "Content-Disposition")
+
+//@CrossOrigin(origins = "*",exposedHeaders = "Content-Disposition")
 @RestController
 public class FileController {
 
@@ -40,7 +42,10 @@ public class FileController {
 
     @Autowired
     private FileService fileService;
-
+    @GetMapping("health")
+    public String health(){
+        return "OK";
+    }
     @GetMapping("/getfiles")
     public List<FileModel> getFiles(){
         return repo.findAll();

@@ -1,133 +1,122 @@
-import React,{useState} from 'react';
+import React, { useState } from 'react';
 import axios from 'axios';
+import { motion } from 'framer-motion';
+import { UploadCloud, Shield, X, ShieldCheck, Eye, EyeOff } from 'lucide-react';
 
-function SendFile({onUploadSuccess}) {
-    const [selectedFile, setSelectedFile] = useState([]);
-    // const [fileSelected, setFileSelected] = useState(0);
-    // const [filename, setFilename] = useState([]);
-    const [code,setCode] = useState(null);
-    const [isChecked,setIsChecked] = useState(false);
-    const [password,setPassword] = useState(null);
-    const handlePass = (event)=>{
-      setPassword(event.target.value);
+function SendFile({ onUploadSuccess }) {
+  const [selectedFile, setSelectedFile] = useState([]);
+  const [code, setCode] = useState(null);
+  const [isChecked, setIsChecked] = useState(false);
+  const [password, setPassword] = useState("");
+  const [showPass, setShowPass] = useState(false); // Toggle for input
+  const [showFinalPass, setShowFinalPass] = useState(false); // Toggle for result screen
+
+  const handleFileChange = (e) => {
+    
+    setSelectedFile([...selectedFile, ...Array.from(e.target.files)]);
+    e.target.value = null; 
+  };
+  const handleSubmit = async () => {
+    if (selectedFile.length === 0) return;
+    const formData = new FormData();
+    if (isChecked) {
+      if (!password) return alert("Set a security key");
+      formData.append('password', password);
     }
-    const handleSubmit = async ()=>{
-        if(selectedFile.length === 0) return;
+    selectedFile.forEach(file => formData.append('file', file));
 
-        const formData = new FormData();
-        if(isChecked)
-        {
-          if(password==null)
-          {
-            alert("password cannot be null");
-            return;
-          }
-          formData.append('password',password);
-        }
-        selectedFile.forEach((file)=>{
-            formData.append('file',file);
-        });
-        
-        try{
-            const response = await axios.post('http://localhost:8080/uploadM',formData,{
-                headers: {
-                    'Content-Type':'multipart/form-data',
-                },
-            });
-            if(onUploadSuccess){
-              onUploadSuccess();
-            }
-            await new Promise(resolve => setTimeout(resolve, 2000));
-            setCode(response.data);
-            
-            
-        
-    } catch(error){
-        console.error('Error uploading file',error);
-        alert('upload failed.');
+    try {
+      const response = await axios.post(`${import.meta.env.VITE_BACKEND_URL}/uploadM`, formData);
+      if (onUploadSuccess) onUploadSuccess();
+      await new Promise(r => setTimeout(r, 2000));
+      setCode(response.data);
+    } catch (error) {
+      alert('Transmission failed.');
     }
-};
-     const handleCancel = (event)=>{
-        setSelectedFile(null);
-        setCode(null);
-        window.location.reload();
+  };
 
-     }
-    const handleDrop = (event)=>{
-      event.preventDefault();
-      const droppedFiles = Array.from(event.dataTransfer.files);
-      setSelectedFile((prev)=>[...prev, ...droppedFiles]);
-      
-    }
-    const handleDragOver = (event)=>{
-      event.preventDefault();
-    }
-    const handleFile = (event) => {
-      const newFiles = Array.from(event.target.files);
-      setSelectedFile((prev)=>[...prev,...newFiles]);
-    };
-
-    const deleteFile = (index)=>{
-      setSelectedFile((prev)=>prev.filter((_,i)=>i!==index));
-    };
-
-    const handleCheck = ()=>{
-      setIsChecked(!isChecked);
-    }
-    return (
-      <>
-        {(code==null) && (
-          
-          <div className='flex flex-col gap-4'>
-            <label htmlFor="check">
-              <input type="checkbox" onChange={handleCheck} checked={isChecked} className="w-5 h-5 rounded border-gray-300"/>
-              <span className='text-white text-2xl'>Secure</span>
-            </label>
-            {isChecked && <label htmlFor="pass" className='flex justify-center gap-10 items-center'>
-              <span className='text-white text-2xl'>Password: </span>
-              <input type="text" onChange={handlePass} placeholder='Enter password' className='text-white text-2xl border-2 rounded-4xl p-2 w-100 text-center'/>
-
-              
-            </label>}
-            
-            <div className="flex items-center justify-center w-full">
-            
-    <label onDragOver={handleDragOver} onDrop={handleDrop} htmlfor="dropzone-file" class="flex flex-col items-center justify-center w-full h-64 bg-neutral-secondary-medium rounded-base cursor-pointer hover:bg-neutral-tertiary-medium">
-        <div className="flex flex-col items-center justify-center text-body pt-5 pb-6">
-            <svg className="w-8 h-8 mb-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h3a3 3 0 0 0 0-6h-.025a5.56 5.56 0 0 0 .025-.5A5.5 5.5 0 0 0 7.207 9.021C7.137 9.017 7.071 9 7 9a4 4 0 1 0 0 8h2.167M12 19v-9m0 0-2 2m2-2 2 2"/></svg>
-            <p className="mb-2 text-sm"><span class="font-semibold">Click to upload</span> or drag and drop</p>
-        </div>
-        <input id="dropzone-file" onChange={handleFile} type="file" class="hidden" multiple/>
-    </label>
-</div>
-          </div>
-        )}
-        {selectedFile.length > 0 && (code==null) && (
-          <div className='flex flex-col justify-center items-center gap-6 py-8'>
-            <div className='flex flex-col items-center gap-2'>
-              {selectedFile.map((file,index)=>(
-                <div>
-                  <strong className='text-2xl text-white '>{file.name}</strong>
-                  <button onClick={()=> deleteFile(index)} className='text-red-500 h-20 w-20'>X</button>
-                </div>
-                
-              ))}
-
+  return (
+    <div className="flex flex-col gap-6 w-full max-w-md mx-auto">
+      {code === null ? (
+        <>
+          {/* ... existing header logic ... */}
+          <div className="flex items-center justify-between bg-zinc-800/80 p-4 rounded-2xl border border-zinc-700">
+            <div className="flex items-center gap-2">
+              {isChecked ? <ShieldCheck className="text-[rgb(141,167,175)]" /> : <Shield className="text-zinc-500" />}
+              <span className="text-white font-semibold">Secure Uplink</span>
             </div>
-              
-              <button className='h-14 w-64 text-xl font-semibold bg-emerald-600 hover:bg-emerald-500 active:scale-95 text-white rounded-2xl transition-all duration-200 shadow-lg shadow-emerald-900/20' onClick={handleSubmit}>Upload</button>
-              <button className='h-14 w-64 text-xl font-semibold bg-red-900 hover:bg-red-500 active:scale-95 text-white rounded-2xl transition-all duration-200 shadow-lg shadow-emerald-900/20' onClick={handleCancel}>Cancel</button>
+            <button 
+              onClick={() => setIsChecked(!isChecked)}
+              className={`w-12 h-6 rounded-full transition-colors ${isChecked ? 'bg-[rgb(141,167,175)]' : 'bg-zinc-600'} relative`}
+            >
+              <div className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-all ${isChecked ? 'left-7' : 'left-1'}`} />
+            </button>
           </div>
-  
-          
-        )}
 
-        {(code!=null)&& <div className='flex flex-col gap-10 justify-center'>
-          <h1 className='text-7xl text-white'>{code}</h1>
-          {isChecked && <h1 className='text-5xl text-amber-200'>Password: {password}</h1>}
-        </div>}
-      </>
-    );
+          {isChecked && (
+            <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} className="relative">
+              <input 
+                type={showPass ? "text" : "password"} 
+                placeholder="Set Transmission Password"
+                className="w-full bg-zinc-800 border border-emerald-500/30 p-3 pr-12 rounded-xl text-white outline-none focus:border-emerald-400"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+              />
+              <button 
+                type="button"
+                onClick={() => setShowPass(!showPass)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-emerald-400 transition-colors"
+              >
+                {showPass ? <EyeOff size={20} /> : <Eye size={20} />}
+              </button>
+            </motion.div>
+          )}
+
+          {/* ... existing file upload logic ... */}
+          <label className="border-2 border-dashed border-zinc-700 hover:border-[rgb(24,99,112)] transition-all rounded-3xl h-48 flex flex-col items-center justify-center cursor-pointer group bg-zinc-800/30">
+            <UploadCloud size={48} className="text-zinc-500 group-hover:text-[rgb(24,99,112)] transition-colors" />
+            <span className="text-zinc-400 mt-2">Drop artifacts here</span>
+            <input type="file" className="hidden" multiple onChange={handleFileChange} />
+          </label>
+          <div className="flex flex-col gap-2 max-h-40 overflow-y-auto">
+            {selectedFile.map((file, i) => (
+              <div key={i} className="flex justify-between items-center bg-zinc-800 p-3 rounded-xl">
+                <span className="text-white text-sm truncate w-40">{file.name}</span>
+                <button onClick={() => setSelectedFile(selectedFile.filter((_, idx) => idx !== i))}><X size={16} className="text-red-400" /></button>
+              </div>
+            ))}
+          </div>
+
+          <button onClick={handleSubmit} disabled={selectedFile.length === 0} className="py-4 bg-[rgb(24,99,112)] text-white rounded-2xl font-bold disabled:opacity-50 active:scale-95 transition-transform">
+            BEAM UP
+          </button>
+        </>
+      ) : (
+        <motion.div initial={{ scale: 0.8 }} animate={{ scale: 1 }} className="text-center py-10">
+          <p className="text-emerald-400 text-sm tracking-widest mb-2 font-mono">UFO CODE</p>
+          <h1 className="text-7xl font-black text-white tracking-tighter mb-6">{code}</h1>
+          
+          {isChecked && (
+            <div className="flex flex-col items-center gap-2 bg-zinc-800/50 p-4 rounded-2xl border border-emerald-900/20">
+              <span className="text-zinc-500 text-xs uppercase font-bold">Security Key</span>
+              <div className="flex items-center gap-3">
+                <span className="text-2xl font-mono text-amber-200 tracking-widest">
+                  {showFinalPass ? password : "••••••••"}
+                </span>
+                <button 
+                  onClick={() => setShowFinalPass(!showFinalPass)}
+                  className="text-zinc-500 hover:text-white transition-colors"
+                >
+                  {showFinalPass ? <EyeOff size={20} /> : <Eye size={20} />}
+                </button>
+              </div>
+            </div>
+          )}
+          <button onClick={() => window.location.reload()} className="mt-8 text-zinc-500 hover:text-emerald-400 text-sm font-medium transition-colors">Generate New Beam</button>
+        </motion.div>
+      )}
+    </div>
+  );
 }
 
-export default SendFile
+export default SendFile;

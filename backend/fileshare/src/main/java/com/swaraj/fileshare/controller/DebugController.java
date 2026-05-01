@@ -18,14 +18,10 @@ public class DebugController {
     public Map<String, Object> checkDatabase() {
         Map<String, Object> info = new HashMap<>();
 
-        // 1. What database name is Spring actually using?
         info.put("connected_database_name", mongoTemplate.getDb().getName());
 
-        // 2. What collections exist in this database?
         info.put("collections_found", mongoTemplate.getCollectionNames());
 
-        // 3. How many documents are in the 'files' collection?
-        // Note: We use "files" because that is what is in your @Document annotation
         if (mongoTemplate.collectionExists("files")) {
             info.put("document_count_in_files", mongoTemplate.getCollection("files").countDocuments());
         } else {
