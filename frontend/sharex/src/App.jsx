@@ -6,7 +6,7 @@ import Ufo from "./components/Ufo";
 import "./App.css";
 import videoSource from "./assets/space.mp4";
 import bg from "./assets/bg.png";
-import logoImg from "./assets/logo.png";
+import logoImg from "./assets/Logo.png";
 import Loader from "./components/Loader";
 import Error from "./components/Error";
 import { FileLock } from "lucide-react";
